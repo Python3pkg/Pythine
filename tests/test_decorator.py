@@ -13,7 +13,7 @@ def slow_network(url, timeout=1):
 
 
 def benchmark_slow_network(test_time):
-    url = 'http://www.beibei.com'
+    url = 'http://www.baidu.com'
     t0 = time.time()
     for _ in range(test_time):
         slow_network(url)
