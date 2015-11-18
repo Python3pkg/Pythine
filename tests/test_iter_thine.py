@@ -5,15 +5,17 @@ from Pythine import Pythine
 import time
 import math
 
+thread_num = 10
 
-@Pythine.map(thread_num=5)
+
+@Pythine.map(thread_num=thread_num)
 def do_something_heavy_iter(i):
     for _ in range(50):
         value = math.exp(math.log(i))
     return value
 
 
-@PythineDeprecated.map(thread_num=5)
+@PythineDeprecated.map(thread_num=thread_num)
 def do_something_heavy_list(i):
     for _ in range(50):
         value = math.exp(math.log(i))
@@ -35,6 +37,6 @@ def benchmark_iter_argslist(test_time):
     pass
 
 if __name__ == '__main__':
-    benchmark_iter_argslist(5000)
+    benchmark_iter_argslist(300)
 
 

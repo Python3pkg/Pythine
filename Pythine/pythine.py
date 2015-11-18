@@ -122,15 +122,17 @@ class Pythine(object):
         }
 
     @staticmethod
-    def _create_args_iterator(seq_len, args, kwargs):
-        for seq_idx in range(seq_len):
-            out_args = tuple([element[seq_idx] for element in args])
-            out_kwargs = dict([(k, v[seq_idx]) for k, v in kwargs.iteritems()])
-            # out_args = tuple([element[seq_idx] if isinstance(element, list) else element
-            #                   for element in args])
-            # out_kwargs = dict([(k, v[seq_idx] if isinstance(v, list) else v)
-            #                    for k, v in kwargs.iteritems()])
-            yield seq_idx, out_args, out_kwargs
+    def _create_args_iterator(args, kwargs, start, stop):
+        arg_list_holder = [i for i, v in enumerate(args) if isinstance(v, list)]
+        kwargs_list_holder = [k for k, v in kwargs.iteritems() if isinstance(v, list)]
+        out_args = list(args[:])
+        out_kwargs = dict(kwargs)
+        for seq_idx in range(start, stop):
+            for i in arg_list_holder:
+                out_args[i] = args[i][seq_idx]
+            for k in kwargs_list_holder:
+                out_kwargs = kwargs[k][seq_idx]
+            yield seq_idx, tuple(out_args), out_kwargs
 
     def __call__(self, *args, **kwargs):
         # now only supports 1-d list
@@ -140,13 +142,14 @@ class Pythine(object):
             # Make function call transparent if user only give one set of argument
             return self._func(*args, **kwargs)
         else:
-            args_iter = self._create_args_iterator(seq_len, args, kwargs)
+            args_iter = self._create_args_iterator(args, kwargs, 0, seq_len)
             result_map = LockedList([None] * seq_len)
             if pythine_args['auto_partition']:
                 even_slices = self._split_input_slice(seq_len,
                                                       pythine_args['thread_num'])
                 thread_list = [threading.Thread(target=self._thread_worker,
-                                                args=(islice(args_iter, start, stop), result_map))
+                                                args=(self._create_args_iterator(args, kwargs, start, stop),
+                                                      result_map))
                                for start, stop in even_slices]
             else:
                 lock_iter = LockedIterator(args_iter)
