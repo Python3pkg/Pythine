@@ -2,6 +2,7 @@ import time
 import requests
 
 from Pythine import Pythine
+from functools import reduce
 
 
 def _slow_network(url):
@@ -19,10 +20,10 @@ def time_slow_network(test_time):
     t1 = time.time()
     ret = slow_network([url] * test_time)
     t2 = time.time()
-    print "Without thread engine: %f" % (t1-t0)
-    print "With thread engine: %f" % (t2-t1)
+    print("Without thread engine: %f" % (t1-t0))
+    print("With thread engine: %f" % (t2-t1))
     # check result
-    print reduce(lambda x, y: x and bool(y), ret, True)
+    print(reduce(lambda x, y: x and bool(y), ret, True))
     pass
 
 if __name__ == '__main__':

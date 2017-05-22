@@ -1,5 +1,6 @@
 import threading
-from itertools import izip
+from functools import reduce
+
 
 __author = 'zhengxu'
 
@@ -15,10 +16,10 @@ class LockedIterator(object):
 
     def __iter__(self): return self
 
-    def next(self):
+    def __next__(self):
         self.lock.acquire()
         try:
-            return self.it.next()
+            return next(self.it)
         finally:
             self.lock.release()
 
@@ -51,7 +52,7 @@ class Pythine(object):
     def _thread_worker(self, lock_iter, result_map):
         while True:
             try:
-                task_index, (task_args, task_kwargs) = lock_iter.next()
+                task_index, (task_args, task_kwargs) = next(lock_iter)
                 task_return = self._func(*task_args, **task_kwargs)
                 result_map[task_index] = task_return
             except StopIteration:
@@ -86,7 +87,7 @@ class Pythine(object):
                 if not isinstance(arg, list):
                     args[i] = [arg] * seq_len
             # normalize kwargs in place
-            for i, k in enumerate(kwargs.keys()):
+            for i, k in enumerate(list(kwargs.keys())):
                 if not isinstance(kwargs[k], list):
                     kwargs[k] = [kwargs[k]] * seq_len
         return seq_len
@@ -103,9 +104,9 @@ class Pythine(object):
             # Make function call transparent if user only give one set of argument
             return self._func(*args, **kwargs)
         else:
-            args_list = zip(*args) or [()] * seq_len
-            kwargs_list = [dict(zip(kwargs.keys(), v)) for v in izip(*kwargs.itervalues())] or [{}] * seq_len
-            lock_iter = LockedIterator(enumerate(zip(args_list, kwargs_list)))
+            args_list = list(zip(*args)) or [()] * seq_len
+            kwargs_list = [dict(list(zip(list(kwargs.keys()), v))) for v in zip(*iter(kwargs.values()))] or [{}] * seq_len
+            lock_iter = LockedIterator(enumerate(list(zip(args_list, kwargs_list))))
             result_map = LockedList([None] * seq_len)
             thread_group = [threading.Thread(target=self._thread_worker, args=(lock_iter, result_map))
                             for _ in range(thread_num)]

@@ -3,6 +3,7 @@ import time
 import requests
 
 from Pythine.pythine import Pythine
+from functools import reduce
 
 __author__ = 'zhengxu'
 
@@ -20,8 +21,8 @@ def benchmark_slow_network(test_time):
     t1 = time.time()
     ret = slow_network([url] * test_time, __pythine_thread_num=8)
     t2 = time.time()
-    print "Without thread engine: %f" % (t1-t0)
-    print "With thread engine: %f" % (t2-t1)
+    print("Without thread engine: %f" % (t1-t0))
+    print("With thread engine: %f" % (t2-t1))
     # check result
     assert reduce(lambda x, y: x and bool(y), ret, True), "Some error occured!"
     pass
@@ -32,7 +33,7 @@ def transparent_call():
     t0 = time.time()
     ret = slow_network(url)
     t1 = time.time()
-    print "With thread engine but transparent call: %f" % (t1-t0)
+    print("With thread engine but transparent call: %f" % (t1-t0))
     assert bool(ret), "No output"
     pass
 
